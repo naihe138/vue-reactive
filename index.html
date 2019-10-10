@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue3的数据响应原理和实现</title>
+</head>
+<body>
+  <div id="root"></div>
+  <button id="btn">年龄+1</button>
+  <!-- <script src="./index.js"></script> -->
+  <script>
+    // const root = document.querySelector('#root')
+    // const btn = document.querySelector('#btn')
+
+    // const ob = reactive({
+    //   name: '张三',
+    //   age: 10
+    // })
+
+    // let cAge = computed(() => ob.age * 2)
+    // effect(() => {
+    //   root.innerHTML = `<h1>${ob.name}---${ob.age}---${cAge.value}</h1>`
+    // })
+    // btn.onclick = function () {
+    //   ob.age += 1
+    // }
+
+
+    const toProxy = new WeakMap() // 缓存代理过的对象
+    const toRaw = new WeakMap() // 缓存被代理过的对象
+    const handlers = {
+      get (target, key, receiver) {
+        return Reflect.get(target, key, receiver)
+      },
+      set (target, key, value, receiver) {
+        return Reflect.set(target, key, value, receiver)
+      }
+    }
+    function reactive (target) {
+      let observed = toProxy.get(target)
+      // 如果是缓存代理过的
+      if (observed) {
+        return observed
+      }
+      if (toRaw.has(target)) {
+        return target
+      }
+      observed = new Proxy(target, handlers)
+      toProxy.set(target, observed) // 缓存observed
+      toRaw.set(observed, target) // 缓存target
+      return observed
+    }
+    let person = {
+      name: '张三',
+      age: 10,
+      hobby: {
+        paly: ['basketball', 'football']
+      }
+    }
+    let ob = reactive(person)
+    console.log(ob)
+  </script>
+</body>
+</html>
